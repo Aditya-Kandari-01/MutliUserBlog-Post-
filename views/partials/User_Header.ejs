@@ -1,0 +1,16 @@
+<header class="header">
+    <a href="/" class="header_logo" target="_blank">NodeJs</a>
+    <nav class="header_nav">
+        <ul>
+            <li>
+                <a href="/home" class="<%= isActiveRoute('/home',currentRoute) %>">Home</a>
+            </li>
+            <li>
+                <a href="/dashboard" class="<%= isActiveRoute('/dashboard',currentRoute) %>">Dashboard</a>
+            </li>
+        </ul>
+    </nav>
+    <div class="header_button">
+        <a href="/logout" style="font-size: 25px; text-decoration: none; " href="/register"><b>logout</b></a>
+    </div>
+</header>
