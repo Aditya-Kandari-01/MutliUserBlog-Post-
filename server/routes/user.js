@@ -183,7 +183,7 @@ router.get('/home', authMiddleWare, async (req, res) => {
             title: username,
             description: "Simple Blog Post for multiple users"
         }
-        let perPage = 2;
+        let perPage = 5;
         let page = req.query.page || 1; // taking the value from the url as an object ({page:2})
         let skipPages = page * perPage - perPage;
         const data = await Post.aggregate([
