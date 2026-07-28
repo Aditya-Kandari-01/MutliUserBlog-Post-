@@ -3,6 +3,7 @@ const router = express.Router()
 const Post = require('../models/Post')
 const User = require('../models/User')
 const Contact = require('../models/Contact');
+const otherUsersPageLayout = './layouts/otherUsersPage'
 
 const mongoose = require('mongoose')
 
@@ -100,7 +101,18 @@ router.get('/post/:id', async (req, res) => {
                 message: "Post not found"
             });
         }
-        res.render('post', { locals, data, currentRoute: `/post/${slug}` })
+        let page = req.query.page || 1; 
+        let perPage = 2;
+        const count = await Post.countDocuments({ userId: process.env.admin_id })
+        const nextPage = parseInt(page) + 1;// Next page value in int
+        const hasNextPage = nextPage <= Math.ceil(count / perPage);
+        const hasPrevPage = parseInt(page) > 1;
+        const prevPage = parseInt(page) - 1;
+        console.log(page)
+        console.log(nextPage)
+        console.log(prevPage)
+        console.log('nextpage')
+        res.render('post', { locals, data, current: page, currentRoute: `/post/${slug}` })
 
     } catch (error) {
         console.log(error)
@@ -118,7 +130,7 @@ router.post('/search', async (req, res) => {
             description: "Simple Blog Post for multiple users"
         }
         let searchTerm = req.body.searchTerm;
-        const searchNoSpecialChar = searchTerm.replace(/[^a-zA-z0-9]/g, "") // g - global flag ; all letter removes , without g only one char removes
+        const searchNoSpecialChar = searchTerm.replace(/[^a-zA-Z0-9]/g, "") // g - global flag ; all letter removes , without g only one char removes
 
         const data = await Post.find({
             userId: process.env.admin_id,
@@ -141,12 +153,113 @@ router.post('/search', async (req, res) => {
     }
 
 })
+
+// Users Page 
+router.get('/home/:username', async (req, res) => {
+    try {
+        const locals = {
+            title: "NodeJs Blog",
+            description: "Simple Blog Post for multiple users"
+        }
+        let perPage = 2;
+        let page = req.query.page || 1; // taking the value from the url as an object ({page:2})
+        let skipPages = page * perPage - perPage;
+        const userDetails = await User.findOne({username:req.params.username})
+        if(!userDetails){
+            res.redirect('/404');
+        }
+        const data = await Post.aggregate([
+            {
+                $match:
+                {
+                    userId: userDetails._id
+                }
+            },
+            {
+                $sort:
+                {
+                    createdAt: -1
+                }
+            }
+        ]).skip(skipPages).limit(perPage).exec();
+
+        const count = await Post.countDocuments({userId:userDetails._id});//Number of posts
+        const nextPage = parseInt(page) + 1;// Next page value in int
+        const hasNextPage = nextPage <= Math.ceil(count / perPage);
+        const hasPrevPage = parseInt(page) > 1;
+        const prevPage = parseInt(page) - 1;
+
+        res.render('userPage', { locals, data, userDetails,layout:otherUsersPageLayout, current: page, nextPage: hasNextPage ? nextPage : null, prevPage: hasPrevPage ? prevPage : null, userId: userDetails._id, currentRoute: '/' })
+
+    } catch (error) {
+        console.log(error);
+        res.redirect('/404');
+    }
+})
+
+// user's post
+router.get('/home/:username/:id', async (req, res) => {
+    const userDetails = await User.findOne({username:req.params.username})
+    try {
+        const locals = {
+            title: "NodeJs Blog",
+            description: "Simple Blog Post for multiple users"
+        }
+        const data = await Post.findById(req.params.id);
+
+        if (!data) {
+            return res.redirect('/404');
+        }
+
+
+        res.render('userPost', {
+            locals,data,userDetails
+        });
+
+    } catch (error) {
+        console.log(error);
+        res.redirect('/404');
+    }
+});
+
+
 module.exports = router
 
 
+// User's search 
 
 
+router.post('/home/:username/search', async (req, res) => {
+    const userDetails = await User.findOne({username:req.params.username})
+    try {
+        const locals = {
+            title: "Search",
+            description: "Simple Blog Post for multiple users"
+        }
+        let searchTerm = req.body.searchTerm;
+        const searchNoSpecialChar = searchTerm.replace(/[^a-zA-Z0-9]/g, "") // g - global flag ; all letter removes , without g only one char removes
 
+        const data = await Post.find({
+            userId: userDetails._id,
+            $or: [
+                {
+                    title: { $regex: new RegExp(searchNoSpecialChar), $options: "i" }
+                },
+                {
+                    body: { $regex: new RegExp(searchNoSpecialChar), $options: "i" }
+                }
+            ]
+        });
+
+        res.render("userSearch", {
+            data, locals,userDetails,
+        });
+
+    } catch (error) {
+        console.log(error)
+    }
+
+})
 
 
 

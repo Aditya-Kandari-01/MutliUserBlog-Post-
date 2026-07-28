@@ -41,6 +41,12 @@ app.set('view engine','ejs') // communicates routes <---> views
 app.set('layout','./layouts/adminPage')
 app.locals.isActiveRoute = isActiveRoute;
 
+// Make currentRoute available to EJS
+app.use((req, res, next) => {
+    res.locals.currentRoute = req.path;
+    next();
+});
+
 app.use('/',require('./server/routes/main'))
 app.use('/',require('./server/routes/user'))
 

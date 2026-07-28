@@ -1,0 +1,30 @@
+<img id="user" src=" <%= (userDetails?.image || '/img/bullet.png') %>" width="800" height="500" />
+
+<section class="articles">
+  <h2 class="articles_heading">Latest Posts</h2>
+  <ul class="article-ul">
+      <% data.forEach(post => { %>
+    <li>
+      <a href="/home/<%= userDetails.username %>/<%= post._id %>">
+        <span><%= post.title %></span>
+        <span class="article-list_date"><%= post.createdAt.toDateString() %></span>
+      </a>
+    </li>
+      <% }) %>
+  </ul>
+  <div class="pagination-container">
+    <% if (nextPage !== null) { %>
+        <a href="/home/<%= userDetails.username %>?page=<%= nextPage %>" class="pagination">
+        &lt; View Older Posts
+        </a>
+    <% } %>
+
+    <% if (prevPage !== null) { %>
+        <a href="/home/<%= userDetails.username %>?page=<%= prevPage %>" class="pagination">
+            View Newer Posts &gt;
+        </a>
+    <% } %>
+  </div>
+  
+</section>
+
